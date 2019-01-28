@@ -30,7 +30,6 @@
 
 <script>
     $('#{$fieldName}').on('change', function(e){
-        console.log(e.target.value);
         $('#{$fieldName}-value').text(e.target.value);
     });
 </script>

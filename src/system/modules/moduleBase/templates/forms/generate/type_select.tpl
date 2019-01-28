@@ -3,11 +3,12 @@
 {else}
     {assign var="isMultiple" value=false}
 {/if}
+
 <select
-        {if $isMultiple}multiple{/if}
+        {if $isMultiple}multiple="multiple"{/if}
         id="item-{$fieldName}"
         name="item[{$fieldName}]{if $isMultiple}[]{/if}"
-        class="form-control"
+        class="{if !$isMultiple}form-control{/if}"
         {if isset($field.options.required) && $field.options.required} required{/if}
         {if isset($field.role.key, $field.role['generate-key']) && $field.role.key && $field.role['generate-key']} disabled{/if}
         {if isset($readonly) && $readonly} disabled{/if}
@@ -38,3 +39,11 @@
         {/if}
     {/foreach}
 </select>
+
+<script>
+    $(function () {
+        {if $isMultiple}
+            $('#item-{$fieldName}').multipleSelect();
+        {/if}
+    });
+</script>

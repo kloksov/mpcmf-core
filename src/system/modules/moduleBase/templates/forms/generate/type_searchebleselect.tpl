@@ -7,22 +7,6 @@
 {else}
     {assign var="isMultiple" value=false}
 {/if}
-<link rel="stylesheet" href="/bower_components/chosen/chosen.min.css">
-<script src="/bower_components/chosen/chosen.jquery.min.js" type="text/javascript"></script>
-{if !isset($chosenSelect)}
-    {assign var="chosenSelect" value=true}
-    <script type="text/javascript">
-        {literal}
-        $(document).ready(function () {
-            $('.chosen-select').chosen({
-                allow_single_deselect:true,
-                search_contains:true,
-                width: '100%'
-            });
-        });
-        {/literal}
-    </script>
-{/if}
 
 {assign var="options" value=[]}
 {if $item === null}
@@ -59,14 +43,15 @@
 {/foreach}
 
 
-<select data-placeholder="Выберите значение..."
-        {if $isMultiple}multiple{/if}
-        id="item-{$fieldName}"
-        name="item[{$fieldName}]{if $isMultiple}[]{/if}"
-        class="form-control chosen-select"
-        {if isset($field.options.required) && $field.options.required} required{/if}
-        {if isset($field.role.key, $field.role['generate-key']) && $field.role.key && $field.role['generate-key']} disabled{/if}
-        {if (isset($readonly) && $readonly)} readonly{/if}>
+<select
+    {if $isMultiple}multiple="multiple"{/if}
+    id="item-{$fieldName}"
+    name="item[{$fieldName}]{if $isMultiple}[]{/if}"
+    class="w-100"
+    {if isset($field.options.required) && $field.options.required} required{/if}
+    {if isset($field.role.key, $field.role['generate-key']) && $field.role.key && $field.role['generate-key']} disabled{/if}
+    {if (isset($readonly) && $readonly)} readonly{/if}
+>
     {if !$isMultiple}<option value="">Выбрать значение...</option>{/if}
 
     {foreach from=$options item="option"}
@@ -75,3 +60,14 @@
         </option>
     {/foreach}
 </select>
+
+<script>
+    $(function () {
+        $('#item-{$fieldName}').multipleSelect({
+            placeholder: 'Выберите значение...',
+            single: {if !$isMultiple} true {else} false {/if},
+            filter: true,
+            selectAll: false,
+        });
+    });
+</script>

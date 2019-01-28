@@ -1,65 +1,91 @@
-<script>
-    if(multitextInitialized == undefined) {
-        var multitextInitialized = true;
-        $(document).ready(function () {
-            var body = $('body');
-            body.on('click', '.filterParams .add', function () {
-                var index = parseInt($('.filterParams .form-control').last().attr('index')) + 1;
-                $(this).parent().parent()
-                        .append('<div class="col-md-12" style="padding-left: 0; padding-right: 0"><div class="col-md-10" style="padding-left: 0; padding-right: 0"><input type="text" class="form-control" id="item-{$fieldName}-' + index + '" index="' + index + '" name="item[{$fieldName}][]" value="" {if isset($readonly) && $readonly} readonly{/if}{if isset($field.options.required) && $field.options.required} required{/if}{if isset($field.role.key, $field.role['generate-key']) && $field.role.key && $field.role['generate-key']} disabled{/if}></div><button type="button" class="add col-md-1 btn btn-default"><span class="fa fa-plus"></span></button><button type="button" class="remove col-md-1 btn btn-default"><span class="fa fa-minus"></span></button></div>')
-                        .fadeIn('slow')
-                ;
-            });
-            body.on('click', '.filterParams .remove', function () {
-                var filterParamsInputs = $(this).parent().parent().children();
-                var count = filterParamsInputs.length;
-                if (count > 1) {
-                    $(this).parent().remove();
-                } else {
-                    filterParamsInputs.val('');
-                }
-            });
-        });
-    }
-</script>
-<div class="filterParams">
-{if isset($item) && !empty($item->getFieldValue($fieldName))}
-    {foreach from=$item->getFieldValue($fieldName) key="index" item="filterValue"}
-        <div class="col-lg-12" style="padding-left: 0; padding-right: 0">
-            <div class="col-md-10" style="padding-left: 0; padding-right: 0">
-                <input
-                        type="text"
-                        class="form-control"
-                        id="item-{$fieldName}-{$index}"
-                        index="{$index}"
-                        name="item[{$fieldName}][]"
-                        value="{$filterValue|htmlspecialchars}"
-                        {if isset($readonly) && $readonly} readonly{/if}
-                        {if isset($field.options.required) && $field.options.required} required{/if}
-                        {if isset($field.role.key, $field.role['generate-key']) && $field.role.key && $field.role['generate-key']} disabled{/if}
-                        >
-            </div>
-            <button type="button" class="add col-md-1 btn btn-default {if isset($readonly) && $readonly} disabled{/if}"><span class="fa fa-plus"></span></button>
-            <button type="button" class="remove col-md-1 btn btn-default {if isset($readonly) && $readonly} disabled{/if}"><span class="fa fa-minus"></span></button>
-        </div>
-    {/foreach}
-{else}
-<div class="col-md-12" style="padding-left: 0; padding-right: 0">
-    <div class="col-md-10" style="padding-left: 0; padding-right: 0">
-        <input
+
+{literal}
+    <script id="multitextTemplate" type="text/x-handlebars-template">
+        <div class="input-group my-2">
+            <input
                 type="text"
                 class="form-control"
-                id="item-{$fieldName}-0"
-                index="0"
-                name="item[{$fieldName}][]"
-                value=""
-                {if isset($readonly) && $readonly} readonly{/if}
-                {if isset($field.options.required) && $field.options.required} required{/if}
-                {if isset($field.role.key, $field.role['generate-key']) && $field.role.key && $field.role['generate-key']} disabled{/if}
-                >
-    </div>
-    <button type="button" class="add col-md-1 btn btn-default {if isset($readonly) && $readonly} disabled{/if}"><span class="fa fa-plus"></span></button>
-    <button type="button" class="remove col-md-1 btn btn-default {if isset($readonly) && $readonly} disabled{/if}"><span class="fa fa-minus"></span></button>
-</div>
-{/if}
+                id="item-{{ fieldName }}-{{ index }}"
+                data-index="{{ index }}"
+                name="item[{{ fieldName }}][]"
+                value="{{ value }}"
+                {{#if readonly}} readonly{{/if}}
+                {{#if required}} required{{/if}}
+                {{#if disabled}} disabled{{/if}}
+            />
+            <div class="input-group-append">
+                <button class="btn btn-success add_field" type="button"><span class="fas fa-plus"></span></button>
+                <button class="btn btn-warning remove_field" type="button"><span class="fas fa-minus"></span></button>
+            </div>
+        </div>
+    </script>
+{/literal}
+
+<script>
+    $(function () {
+        var $box = $('#box-{$fieldName}'),
+            multitextTemplate = Handlebars.compile($('#multitextTemplate').html()),
+            is_readonly = {if isset($readonly) && $readonly} true {else} false {/if},
+            is_required = {if isset($field.options.required) && $field.options.required} true {else} false {/if},
+            is_disabled = {if isset($field.role.key, $field.role['generate-key']) && $field.role.key && $field.role['generate-key']} true {else} false {/if},
+            list_fields = [];
+
+        {if isset($item) && !empty($item->getFieldValue($fieldName))}
+            {foreach from=$item->getFieldValue($fieldName) key="index" item="filterValue"}
+                list_fields.push({
+                    fieldName: '{$fieldName}',
+                    index: '{$index}',
+                    value: '{$filterValue|htmlspecialchars}',
+                    readonly: is_readonly,
+                    required: is_required,
+                    disabled: is_disabled,
+                });
+            {/foreach}
+
+        {else}
+            list_fields.push({
+                fieldName: '{$fieldName}',
+                index: '0',
+                value: '',
+                readonly: is_readonly,
+                required: is_required,
+                disabled: is_disabled,
+            });
+        {/if}
+
+        for (var i = 0; i < list_fields.length; i++) {
+            $box.append(multitextTemplate(list_fields[i]));
+        }
+
+        // Add new field
+        $box.on('click', '.add_field', function () {
+            var new_index = parseInt($('.form-control', $box).last().data('index')) + 1,
+                params = {
+                    fieldName: '{$fieldName}',
+                    index: new_index,
+                    value: '',
+                    readonly: is_readonly,
+                    required: is_required,
+                    disabled: is_disabled,
+                };
+
+            $box.append(multitextTemplate(params));
+        });
+
+        // Remove field
+        $box.on('click', '.remove_field', function () {
+            var $inputs = $('.form-control', $box),
+                $field = $(this).closest('.input-group');
+
+            if ($inputs.length >= 2) {
+                $field.remove();
+            } else {
+                $('.form-control', $field).val('');
+            }
+        });
+    });
+</script>
+
+<div id="box-{$fieldName}">
+
 </div>
